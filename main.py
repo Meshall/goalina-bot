@@ -59,11 +59,12 @@ def polling_listener(bot):
             time.sleep(60)
 
 
+
 def main():
     updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("progress", progress))
-    threading.Thread(target=websocket_listener, args=(updater.bot,), daemon=True).start()
+    threading.Thread(target=polling_listener, args=(updater.bot,), daemon=True).start()
     updater.start_polling()
     updater.idle()
 
