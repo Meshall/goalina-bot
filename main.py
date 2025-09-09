@@ -40,22 +40,24 @@ def progress(update: Update, context: CallbackContext):
     ensure_progress_message(context)
     update.message.reply_text("Progress refreshed ✅")
 
-def websocket_listener(bot):
-    ws = create_connection("wss://blockstream.info/api/ws")
-    ws.send(json.dumps({"op": "addr_sub", "addr": BTC_ADDRESS}))
+import time
+
+def polling_listener(bot):
+    global progress_message_id
+    last_balance = None
     while True:
         try:
-            data = json.loads(ws.recv())
-            if data.get("op") == "utx":
-                balance = get_balance_btc(BTC_ADDRESS)
+            balance = get_balance_btc(BTC_ADDRESS)
+            if balance != last_balance:
                 msg = format_progress(balance)
                 if progress_message_id:
                     bot.edit_message_text(chat_id=CHAT_ID, message_id=progress_message_id, text=msg)
+                last_balance = balance
+            time.sleep(30)  # check every 30s
         except Exception as e:
-            print("⚠️ WebSocket error:", e)
-            ws.close()
-            ws = create_connection("wss://blockstream.info/api/ws")
-            ws.send(json.dumps({"op": "addr_sub", "addr": BTC_ADDRESS}))
+            print("⚠️ Polling error:", e)
+            time.sleep(60)
+
 
 def main():
     updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
